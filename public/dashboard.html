@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Courses</h2>
+  <table border="1" id="coursesTable">
+    <tr>
+      <th>Code</th>
+      <th>Name</th>
+      <th>Instructor</th>
+      <th>Schedule</th>
+      <th>Credits</th>
+      <th>Action</th>
+    </tr>
+  </table>
+
+  <script>
+    fetch('/api/courses')
+      .then(res => res.json())
+      .then(courses => {
+        const table = document.getElementById('coursesTable');
+        courses.forEach(course => {
+          const row = table.insertRow();
+          row.insertCell(0).innerText = course.code;
+          row.insertCell(1).innerText = course.name;
+          row.insertCell(2).innerText = course.instructor;
+          row.insertCell(3).innerText = course.schedule;
+          row.insertCell(4).innerText = course.credits;
+          const btnCell = row.insertCell(5);
+          const btn = document.createElement('button');
+          btn.innerText = 'Register';
+          btn.onclick = () => {
+            fetch('/api/register-course', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ email: '02fe23bcs144@kletech.ac.in', courseCode: course.code })
+            }).then(()=>alert('Registered for ' + course.code));
+          };
+          btnCell.appendChild(btn);
+        });
+      });
+  </script>
+</body>
+</html>
