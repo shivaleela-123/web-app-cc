@@ -9,7 +9,7 @@ const Student = require('./models/student');
 const Course  = require('./models/course');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
