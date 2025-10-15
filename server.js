@@ -6,26 +6,38 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 
 const Student = require('./models/student');
-const Course  = require('./models/course');
+const Course = require('./models/course');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(()=> console.log('MongoDB connected'))
-  .catch(err => console.error('Mongo connect error', err));
+// ✅ MongoDB connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ MongoDB connected'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Registration
+// ✅ Homepage route (fix for Render “Cannot GET /”)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// ✅ Registration route
 app.post('/register', async (req, res) => {
   try {
     const { fullName, email, phone, password, confirmPassword } = req.body;
-    if (!fullName || !email || !password) return res.status(400).send('Missing fields');
-    if (password !== confirmPassword) return res.status(400).send('Passwords must match');
+
+    if (!fullName || !email || !password)
+      return res.status(400).send('Missing fields');
+    if (password !== confirmPassword)
+      return res.status(400).send('Passwords must match');
 
     const existing = await Student.findOne({ email });
     if (existing) return res.status(400).send('Email already registered');
@@ -41,7 +53,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Login
+// ✅ Login route
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -58,22 +70,35 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Get courses
+// ✅ Get all courses
 app.get('/api/courses', async (req, res) => {
-  const courses = await Course.find();
-  res.json(courses);
-});
-
-// Register course
-app.post('/api/register-course', async (req, res) => {
-  const { email, courseCode } = req.body;
-  const student = await Student.findOne({ email });
-  if (!student) return res.status(400).send('Student not found');
-  if (!student.courses.includes(courseCode)) {
-    student.courses.push(courseCode);
-    await student.save();
+  try {
+    const courses = await Course.find();
+    res.json(courses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
   }
-  res.send('Registered for course');
 });
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+// ✅ Register for a course
+app.post('/api/register-course', async (req, res) => {
+  try {
+    const { email, courseCode } = req.body;
+    const student = await Student.findOne({ email });
+    if (!student) return res.status(400).send('Student not found');
+
+    if (!student.courses.includes(courseCode)) {
+      student.courses.push(courseCode);
+      await student.save();
+    }
+
+    res.send('Registered for course');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// ✅ Start server
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
